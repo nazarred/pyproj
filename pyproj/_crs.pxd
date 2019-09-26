@@ -1,4 +1,5 @@
 include "proj.pxi"
+include "proj_experimental.pxi"
 
 
 cdef _get_concatenated_operations(PJ_CONTEXT*context, PJ*concatenated_operation)
@@ -118,6 +119,54 @@ cdef class _CRS(Base):
     cdef PJ_TYPE _type
     cdef PJ_PROJ_INFO projpj_info
     cdef readonly object srs
+    cdef readonly object type_name
+    cdef readonly object _ellipsoid
+    cdef readonly object _area_of_use
+    cdef readonly object _prime_meridian
+    cdef readonly object _datum
+    cdef readonly object _sub_crs_list
+    cdef readonly object _source_crs
+    cdef readonly object _target_crs
+    cdef readonly object _geodetic_crs
+    cdef readonly object _coordinate_system
+    cdef readonly object _coordinate_operation
+
+
+cdef class _VerticalCRS(Base):
+    cdef PJ_TYPE _type
+    cdef PJ_PROJ_INFO projpj_info
+    cdef readonly object type_name
+    cdef readonly object _ellipsoid
+    cdef readonly object _area_of_use
+    cdef readonly object _prime_meridian
+    cdef readonly object _datum
+    cdef readonly object _sub_crs_list
+    cdef readonly object _source_crs
+    cdef readonly object _target_crs
+    cdef readonly object _geodetic_crs
+    cdef readonly object _coordinate_system
+    cdef readonly object _coordinate_operation
+
+
+cdef class _CompoundCRS(Base):
+    cdef PJ_TYPE _type
+    cdef PJ_PROJ_INFO projpj_info
+    cdef readonly object type_name
+    cdef readonly object _ellipsoid
+    cdef readonly object _area_of_use
+    cdef readonly object _prime_meridian
+    cdef readonly object _datum
+    cdef readonly object _sub_crs_list
+    cdef readonly object _source_crs
+    cdef readonly object _target_crs
+    cdef readonly object _geodetic_crs
+    cdef readonly object _coordinate_system
+    cdef readonly object _coordinate_operation
+
+
+cdef class _Projected3DCRS(Base):
+    cdef PJ_TYPE _type
+    cdef PJ_PROJ_INFO projpj_info
     cdef readonly object type_name
     cdef readonly object _ellipsoid
     cdef readonly object _area_of_use

@@ -1725,6 +1725,26 @@ cdef class _CRS(Base):
         self._set_base_info()
         CRSError.clear()
 
+    def _create_bound_vertical_crs_from_geoid(self, geoid_file):
+        self.projobj = proj_crs_create_bound_vertical_crs_to_WGS84(
+            self.context,
+            self.projobj,
+            cstrencode(geoid_file),
+        )
+        return _CRS(self.to_wkt())
+
+    def _get_crs_with_altered_linear_unit(self, linear_units, linear_units_conv, unit_auth_name, unit_code):
+        self.projobj = proj_crs_alter_cs_linear_unit(
+            self.context,
+            self.projobj,
+            cstrencode(linear_units),
+            linear_units_conv,
+            cstrencode(unit_auth_name),
+            cstrencode(unit_code),
+        )
+        return _CRS(self.to_wkt())
+
+
     @property
     def axis_info(self):
         """
@@ -2271,3 +2291,155 @@ cdef class _CRS(Base):
         if self.is_bound:
             return self.source_crs.is_geocentric
         return self._type == PJ_TYPE_GEOCENTRIC_CRS
+
+
+cdef class _VerticalCRS(Base):
+    """
+    .. versionadded:: Nazar
+
+    The cython CRS class to be used as the base for the
+    python CRS class.
+    """
+
+    def __cinit__(self):
+        self._ellipsoid = None
+        self._area_of_use = None
+        self._prime_meridian = None
+        self._datum = None
+        self._sub_crs_list = None
+        self._source_crs = None
+        self._target_crs = None
+        self._geodetic_crs = None
+        self._coordinate_system = None
+        self._coordinate_operation = None
+        self.type_name = "undefined"
+
+    def __init__(self, crs_name, datum_name, linear_units, linear_units_conv):
+        self.context = proj_context_create()
+        pyproj_context_initialize(self.context, False)
+        # create vertical CRS
+        if linear_units is None:
+            self.projobj = proj_create_vertical_crs(
+                self.context,
+                cstrencode(crs_name),
+                cstrencode(datum_name),
+                NULL,
+                linear_units_conv
+            )
+        else:
+            self.projobj = proj_create_vertical_crs(
+                self.context,
+                cstrencode(crs_name),
+                cstrencode(datum_name),
+                cstrencode(linear_units),
+                linear_units_conv
+            )
+        if self.projobj == NULL:
+            raise CRSError(
+                f"Can't create vertical CRS from the parameters: crs_name={crs_name}, "
+                f"datum_name={datum_name}, linear_units={linear_units}, "
+                f"linear_units_conv={linear_units_conv}z"
+            )
+        # make sure the input is a CRS
+        if not proj_is_crs(self.projobj):
+            raise CRSError("Input is not a CRS")
+        # set proj information
+        self._type = proj_get_type(self.projobj)
+        self.type_name = _CRS_TYPE_MAP[self._type]
+        self._set_base_info()
+        CRSError.clear()
+
+cdef class _CompoundCRS(Base):
+    """
+    .. versionadded:: Nazar
+
+    The cython CRS class to be used as the base for the
+    python CRS class.
+    """
+
+    def __cinit__(self):
+        self._ellipsoid = None
+        self._area_of_use = None
+        self._prime_meridian = None
+        self._datum = None
+        self._sub_crs_list = None
+        self._source_crs = None
+        self._target_crs = None
+        self._geodetic_crs = None
+        self._coordinate_system = None
+        self._coordinate_operation = None
+        self.type_name = "undefined"
+
+    def __init__(self, crs_name, vert_crs_proj_str, horiz_crs_proj_str):
+        vert_crs = _CRS(vert_crs_proj_str)
+        horiz_crs = _CRS(horiz_crs_proj_str)
+        self.context = proj_context_create()
+        pyproj_context_initialize(self.context, False)
+        # create compound CRS
+        self.projobj = proj_create_compound_crs(
+            self.context,
+            cstrencode(crs_name),
+            vert_crs.projobj,
+            horiz_crs.projobj,
+        )
+        if self.projobj == NULL:
+            raise CRSError(
+                f"Can't create compound CRS from the parameters: horizontal crs={horiz_crs} "
+                f"and vertical crs {vert_crs}"
+            )
+        # make sure the input is a CRS
+        if not proj_is_crs(self.projobj):
+            raise CRSError("Input is not a CRS")
+        # set proj information
+        self._type = proj_get_type(self.projobj)
+        self.type_name = _CRS_TYPE_MAP[self._type]
+        self._set_base_info()
+        CRSError.clear()
+        
+        
+cdef class _Projected3DCRS(Base):
+    """
+    .. versionadded:: Nazar
+
+    The cython CRS class to be used as the base for the
+    python CRS class.
+    """
+
+    def __cinit__(self):
+        self._ellipsoid = None
+        self._area_of_use = None
+        self._prime_meridian = None
+        self._datum = None
+        self._sub_crs_list = None
+        self._source_crs = None
+        self._target_crs = None
+        self._geodetic_crs = None
+        self._coordinate_system = None
+        self._coordinate_operation = None
+        self.type_name = "undefined"
+
+    def __init__(self, crs_name, projected_2d_crs_proj_str, geog_3d_crs_proj_str):
+        projected_2d_crs = _CRS(projected_2d_crs_proj_str)
+        geog_3d_crs = _CRS(geog_3d_crs_proj_str)
+        self.context = proj_context_create()
+        pyproj_context_initialize(self.context, False)
+        # create compound CRS
+        self.projobj = proj_crs_create_projected_3D_crs_from_2D(
+            self.context,
+            cstrencode(crs_name),
+            projected_2d_crs.projobj,
+            geog_3d_crs.projobj,
+        )
+        if self.projobj == NULL:
+            raise CRSError(
+                f"Can't create compound CRS from the parameters: horizontal crs={projected_2d_crs} "
+                f"and vertical crs {geog_3d_crs}"
+            )
+        # make sure the input is a CRS
+        if not proj_is_crs(self.projobj):
+            raise CRSError("Input is not a CRS")
+        # set proj information
+        self._type = proj_get_type(self.projobj)
+        self.type_name = _CRS_TYPE_MAP[self._type]
+        self._set_base_info()
+        CRSError.clear()

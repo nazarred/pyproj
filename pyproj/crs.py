@@ -35,6 +35,9 @@ import warnings
 
 from pyproj._crs import (  # noqa
     _CRS,
+    _VerticalCRS,
+    _CompoundCRS,
+    _Projected3DCRS,
     CoordinateOperation,
     Datum,
     Ellipsoid,
@@ -435,6 +438,45 @@ class CRS(_CRS):
             raise CRSError("Invalid CRS input: {!r}".format(projparams))
 
         super(CRS, self).__init__(projstring)
+
+    @classmethod
+    def create_vertical_crs(cls, crs_name, datum_name, linear_units, linear_units_conv):
+        """Create vertical CRS from the paramaters."""
+        # Because we can create a _CRS object only from the proj_string firstly we create
+        # a _VerticalCRS object than get WKT from it and create _CRS object
+        vertical_crs = _VerticalCRS(crs_name, datum_name, linear_units, linear_units_conv)
+        return cls.from_wkt(vertical_crs.to_wkt())
+
+    def create_bound_vertical_crs_from_geoid(self, geoid_file):
+        """Use geoid file and vertical CRS for creating bound vertical CRS to WGS84.
+
+        This method doesn't create anything it just modify existing object
+        """
+        return CRS(self._create_bound_vertical_crs_from_geoid(geoid_file).to_wkt())
+
+    def get_crs_with_altered_linear_unit(self, linear_units, linear_units_conv, unit_auth_name, unit_code):
+        """ Create new CRS with altered units to user defined units."""
+        return CRS(self._get_crs_with_altered_linear_unit(linear_units, linear_units_conv, unit_auth_name, str(unit_code)))
+
+    @classmethod
+    def create_compound_crs(cls, crs_name, vert_crs, horiz_crs):
+        """Create a Compound CRS from vertical and horizontal CRS."""
+        compound_crs = _CompoundCRS(
+            crs_name,
+            CRS.from_user_input(vert_crs).to_wkt(),
+            CRS.from_user_input(horiz_crs).to_wkt(),
+        )
+        return cls.from_wkt(compound_crs.to_wkt())
+
+    @classmethod
+    def create_projected_3d_crs(cls, crs_name, projected_2d_crs, geog_3d_crs):
+        """Create a Compound 3D CRS from horizontal 2D CRS and Geographic 3D CRS."""
+        projected_3d_crs = _Projected3DCRS(
+            crs_name,
+            CRS.from_user_input(projected_2d_crs).to_wkt(),
+            CRS.from_user_input(geog_3d_crs).to_wkt(),
+        )
+        return cls.from_wkt(projected_3d_crs.to_wkt())
 
     @classmethod
     def from_authority(cls, auth_name, code):
