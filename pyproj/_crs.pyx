@@ -1,4 +1,5 @@
 import json
+import math
 import re
 import warnings
 from collections import OrderedDict
@@ -2434,6 +2435,70 @@ cdef class _Projected3DCRS(Base):
             raise CRSError(
                 f"Can't create compound CRS from the parameters: horizontal crs={projected_2d_crs} "
                 f"and vertical crs {geog_3d_crs}"
+            )
+        # make sure the input is a CRS
+        if not proj_is_crs(self.projobj):
+            raise CRSError("Input is not a CRS")
+        # set proj information
+        self._type = proj_get_type(self.projobj)
+        self.type_name = _CRS_TYPE_MAP[self._type]
+        self._set_base_info()
+        CRSError.clear()
+
+
+cdef class _Geographic3DCRS(Base):
+    """
+    .. versionadded:: Nazar
+
+    The cython CRS class to be used as the base for the
+    python CRS class.
+    """
+
+    def __cinit__(self):
+        self._ellipsoid = None
+        self._area_of_use = None
+        self._prime_meridian = None
+        self._datum = None
+        self._sub_crs_list = None
+        self._source_crs = None
+        self._target_crs = None
+        self._geodetic_crs = None
+        self._coordinate_system = None
+        self._coordinate_operation = None
+        self.type_name = "undefined"
+
+    def __init__(self, datum_name, datum_auth_name, datum_code):
+        self.context = proj_context_create()
+        pyproj_context_initialize(self.context, False)
+
+        cdef PJ* datum_pj = proj_create_from_database(
+            self.context,
+            cstrencode(str(datum_auth_name)),
+            cstrencode(str(datum_code)),
+            PJ_CATEGORY_DATUM,
+            False,
+            NULL,
+        )
+
+        cdef PJ* ellips_3d = proj_create_ellipsoidal_3D_cs(
+            self.context,
+            PJ_ELLPS3D_LONGITUDE_LATITUDE_HEIGHT,
+            cstrencode("degree"),
+            math.pi / 180.0,
+            cstrencode("metre"),
+            1.0
+        )
+
+        # create Geographic 3D CRS
+        self.projobj = proj_create_geographic_crs_from_datum(
+            self.context,
+            cstrencode(datum_name),
+            datum_pj,
+            ellips_3d,
+        )
+        if self.projobj == NULL:
+            raise CRSError(
+                f"Can't create compound CRS from the parameters"
             )
         # make sure the input is a CRS
         if not proj_is_crs(self.projobj):

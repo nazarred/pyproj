@@ -27,3 +27,19 @@ cdef extern from "proj_experimental.h":
                                                double linear_units_conv,
                                                const char *unit_auth_name,
                                                const char *unit_code);
+
+    ctypedef enum PJ_ELLIPSOIDAL_CS_3D_TYPE:
+        PJ_ELLPS3D_LONGITUDE_LATITUDE_HEIGHT,
+        PJ_ELLPS3D_LATITUDE_LONGITUDE_HEIGHT
+
+    PJ *proj_create_ellipsoidal_3D_cs(PJ_CONTEXT *ctx,
+                                           PJ_ELLIPSOIDAL_CS_3D_TYPE type,
+                                           const char* horizontal_angular_unit_name,
+                                           double horizontal_angular_unit_conv_factor,
+                                           const char* vertical_linear_unit_name,
+                                           double vertical_linear_unit_conv_factor);
+
+    PJ *proj_create_geographic_crs_from_datum(PJ_CONTEXT *ctx,
+                                                const char *crs_name,
+                                                PJ* datum,
+                                                PJ* ellipsoidal_cs);
