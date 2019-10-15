@@ -2508,3 +2508,80 @@ cdef class _Geographic3DCRS(Base):
         self.type_name = _CRS_TYPE_MAP[self._type]
         self._set_base_info()
         CRSError.clear()
+
+
+cdef class _UTMCRS(Base):
+    """
+    .. versionadded:: Nazar
+
+    The cython CRS class to be used as the base for the
+    python CRS class.
+    """
+
+    def __cinit__(self):
+        self._ellipsoid = None
+        self._area_of_use = None
+        self._prime_meridian = None
+        self._datum = None
+        self._sub_crs_list = None
+        self._source_crs = None
+        self._target_crs = None
+        self._geodetic_crs = None
+        self._coordinate_system = None
+        self._coordinate_operation = None
+        self.type_name = "undefined"
+
+    def __init__(self, datum_name, datum_auth_name, datum_code, utm_zone, north=True):
+        self.context = proj_context_create()
+        pyproj_context_initialize(self.context, False)
+
+        cdef PJ* conv = proj_create_conversion_utm(
+            self.context,
+            utm_zone,
+            north,
+        )
+        cdef PJ* cs = proj_create_cartesian_2D_cs(
+            self.context,
+            PJ_CART2D_EASTING_NORTHING,
+            NULL,
+            0);
+
+        cdef PJ* geog_cs = proj_create_ellipsoidal_2D_cs(
+            self.context, PJ_ELLPS2D_LONGITUDE_LATITUDE, NULL, 0)
+
+        cdef PJ* datum_pj = proj_create_from_database(
+            self.context,
+            cstrencode(str(datum_auth_name)),
+            cstrencode(str(datum_code)),
+            PJ_CATEGORY_DATUM,
+            False,
+            NULL,
+        )
+        cdef PJ* geog_crs = proj_create_geographic_crs_from_datum(
+            self.context,
+            cstrencode(datum_name),
+            datum_pj,
+            geog_cs,
+        )
+        
+        
+        # create Geographic UTM CRS
+        self.projobj = proj_create_projected_crs(
+            self.context,
+            cstrencode(f"UTM zone {utm_zone}{'N' if north else 's'}"),
+            geog_crs,
+            conv,
+            cs,
+        )
+        if self.projobj == NULL:
+            raise CRSError(
+                f"Can't create compound CRS from the parameters"
+            )
+        # make sure the input is a CRS
+        if not proj_is_crs(self.projobj):
+            raise CRSError("Input is not a CRS")
+        # set proj information
+        self._type = proj_get_type(self.projobj)
+        self.type_name = _CRS_TYPE_MAP[self._type]
+        self._set_base_info()
+        CRSError.clear()

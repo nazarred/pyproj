@@ -45,7 +45,7 @@ from pyproj._crs import (  # noqa
     _load_proj_json,
     is_proj,
     is_wkt,
-    _Geographic3DCRS)
+    _Geographic3DCRS, _UTMCRS)
 from pyproj.cf1x8 import (
     GRID_MAPPING_NAME_MAP,
     INVERSE_GRID_MAPPING_NAME_MAP,
@@ -440,10 +440,18 @@ class CRS(_CRS):
         super(CRS, self).__init__(projstring)
 
     @classmethod
-    def create_geographical_3d_crs_from_datum(cls, name, datum_auth_name, datum_code):
+    def create_projected_utm_from_datum(
+            cls, datum_name, datum_auth_name, datum_code, utm_zone, north=True):
         """Create geographical 3D CRS from the parameters."""
 
-        geographical_crs = _Geographic3DCRS(name, datum_auth_name, datum_code)
+        utm_crs = _UTMCRS(datum_name, datum_auth_name, datum_code, utm_zone, north=north)
+        return cls.from_wkt(utm_crs.to_wkt())
+
+    @classmethod
+    def create_geographical_3d_crs_from_datum(cls, datum_name, datum_auth_name, datum_code):
+        """Create geographical 3D CRS from the parameters."""
+
+        geographical_crs = _Geographic3DCRS(datum_name, datum_auth_name, datum_code)
         return cls.from_wkt(geographical_crs.to_wkt())
 
     @classmethod

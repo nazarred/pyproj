@@ -39,7 +39,37 @@ cdef extern from "proj_experimental.h":
                                            const char* vertical_linear_unit_name,
                                            double vertical_linear_unit_conv_factor);
 
+    ctypedef enum PJ_ELLIPSOIDAL_CS_2D_TYPE:
+        PJ_ELLPS2D_LONGITUDE_LATITUDE,
+        PJ_ELLPS2D_LATITUDE_LONGITUDE
+
+    PJ *proj_create_ellipsoidal_2D_cs(PJ_CONTEXT *ctx,
+                                                   PJ_ELLIPSOIDAL_CS_2D_TYPE type,
+                                                   const char* unit_name,
+                                                   double unit_conv_factor);
+
     PJ *proj_create_geographic_crs_from_datum(PJ_CONTEXT *ctx,
                                                 const char *crs_name,
                                                 PJ* datum,
                                                 PJ* ellipsoidal_cs);
+
+    PJ *proj_create_projected_crs(PJ_CONTEXT *ctx,
+                                               const char* crs_name,
+                                               const PJ* geodetic_crs,
+                                               const PJ* conversion,
+                                               const PJ* coordinate_system);
+
+    PJ *proj_create_conversion_utm(PJ_CONTEXT *ctx,
+                                    int zone,
+                                    int north);
+
+    ctypedef enum PJ_CARTESIAN_CS_2D_TYPE:
+        PJ_CART2D_EASTING_NORTHING,
+        PJ_CART2D_NORTHING_EASTING,
+        PJ_CART2D_NORTH_POLE_EASTING_SOUTH_NORTHING_SOUTH,
+        PJ_CART2D_SOUTH_POLE_EASTING_NORTH_NORTHING_NORTH,
+        PJ_CART2D_WESTING_SOUTHING
+    PJ *proj_create_cartesian_2D_cs(PJ_CONTEXT *ctx,
+                                                 PJ_CARTESIAN_CS_2D_TYPE type,
+                                                 const char* unit_name,
+                                                 double unit_conv_factor);
