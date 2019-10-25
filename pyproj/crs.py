@@ -462,12 +462,15 @@ class CRS(_CRS):
         vertical_crs = _VerticalCRS(crs_name, datum_name, linear_units, linear_units_conv)
         return cls.from_wkt(vertical_crs.to_wkt())
 
-    def create_bound_vertical_crs_from_geoid(self, geoid_file):
+    def create_bound_vertical_crs_from_geoid(self, geoid_file, hub_geographic_3D_crs):
         """Use geoid file and vertical CRS for creating bound vertical CRS to WGS84.
 
         This method doesn't create anything it just modify existing object
         """
-        return CRS(self._create_bound_vertical_crs_from_geoid(geoid_file).to_wkt())
+        hub_geographic_3D_crs = CRS(hub_geographic_3D_crs)
+        return CRS(
+            self._create_bound_vertical_crs_from_geoid(geoid_file, hub_geographic_3D_crs).to_wkt()
+        )
 
     def get_crs_with_altered_linear_unit(self, linear_units, linear_units_conv, unit_auth_name, unit_code):
         """ Create new CRS with altered units to user defined units."""

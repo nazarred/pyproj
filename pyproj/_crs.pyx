@@ -1726,10 +1726,12 @@ cdef class _CRS(Base):
         self._set_base_info()
         CRSError.clear()
 
-    def _create_bound_vertical_crs_from_geoid(self, geoid_file):
-        self.projobj = proj_crs_create_bound_vertical_crs_to_WGS84(
+    def _create_bound_vertical_crs_from_geoid(self, geoid_file, hub_geographic_3d_crs):
+        geoid_crs_projobj = proj_create(self.context, cstrencode(hub_geographic_3d_crs.to_wkt()))
+        self.projobj = proj_crs_create_bound_vertical_crs(
             self.context,
             self.projobj,
+            geoid_crs_projobj,
             cstrencode(geoid_file),
         )
         return _CRS(self.to_wkt())

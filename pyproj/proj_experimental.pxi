@@ -7,9 +7,10 @@ cdef extern from "proj_experimental.h":
                                               const char *linear_units,
                                               double linear_units_conv)
 
-    PJ *proj_crs_create_bound_vertical_crs_to_WGS84(PJ_CONTEXT *ctx,
-                                                        const PJ* vert_crs,
-                                                        const char* grid_name)
+    PJ *proj_crs_create_bound_vertical_crs(PJ_CONTEXT *ctx,
+                                                const PJ* vert_crs,
+                                                const PJ* hub_geographic_3D_crs,
+                                                const char* grid_name)
 
     PJ *proj_create_compound_crs(PJ_CONTEXT *ctx,
                                         const char *crs_name,
