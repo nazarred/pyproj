@@ -36,6 +36,7 @@ import warnings
 from pyproj._crs import (  # noqa
     _CRS,
     _VerticalCRS,
+    _VerticalCRSGeoid,
     _CompoundCRS,
     _Projected3DCRS,
     CoordinateOperation,
@@ -462,6 +463,38 @@ class CRS(_CRS):
         vertical_crs = _VerticalCRS(crs_name, datum_name, linear_units, linear_units_conv)
         return cls.from_wkt(vertical_crs.to_wkt())
 
+    @classmethod
+    def create_vertical_crs_from_geoid(cls, name, geoid_file, geoid_crs,
+                                       vertical_crs, linear_units, linear_units_conv):
+        """Use geoid file and vertical CRS for creating bound vertical CRS to WGS84.
+
+        This method doesn't create anything it just modify existing object
+        """
+        datum_auth_name = None
+        datum_code = None
+        geoid_file = f"PROJ {geoid_file}"
+        if vertical_crs:
+            vertical_crs = CRS(vertical_crs)
+            datum_name = vertical_crs.datum.name
+            authority = vertical_crs.datum.to_authority()
+            if authority:
+                datum_auth_name = authority[0]
+                datum_code = authority[1]
+        else:
+            datum_name = "Dummy Vertical CRS"
+        geoid_crs = CRS(geoid_crs)
+        return CRS(
+            _VerticalCRSGeoid(
+                name,
+                datum_name,
+                datum_auth_name,
+                datum_code,
+                linear_units,
+                linear_units_conv,
+                geoid_file,
+                geoid_crs,
+            ).to_wkt()
+        )
     def create_bound_vertical_crs_from_geoid(self, geoid_file, hub_geographic_3D_crs):
         """Use geoid file and vertical CRS for creating bound vertical CRS to WGS84.
 

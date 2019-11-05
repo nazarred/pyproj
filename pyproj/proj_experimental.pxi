@@ -12,6 +12,19 @@ cdef extern from "proj_experimental.h":
                                                 const PJ* hub_geographic_3D_crs,
                                                 const char* grid_name)
 
+    PJ *proj_create_vertical_crs_ex(PJ_CONTEXT *ctx,
+                                              const char *crs_name,
+                                              const char *datum_name,
+                                              const char *datum_auth_name,
+                                              const char* datum_code,
+                                              const char *linear_units,
+                                              double linear_units_conv,
+                                              const char* geoid_model_name,
+                                              const char* geoid_model_auth_name,
+                                              const char* geoid_model_code,
+                                              const PJ* geoid_geog_crs,
+                                              const char *const *options)
+
     PJ *proj_create_compound_crs(PJ_CONTEXT *ctx,
                                         const char *crs_name,
                                         const PJ* horiz_crs,

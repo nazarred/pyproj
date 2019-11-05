@@ -1147,6 +1147,18 @@ cdef class Datum(Base):
         )
         return self._prime_meridian
 
+    def to_authority(self):
+        """Return EPSG auth name and code"""
+        cdef const char* code
+        cdef const char* out_auth_name
+        code = proj_get_id_code(self.projobj, 0)
+        out_auth_name = proj_get_id_auth_name(self.projobj, 0)
+        if out_auth_name != NULL and code != NULL:
+            return pystrdecode(out_auth_name), pystrdecode(code)
+
+        return None
+
+
 
 cdef class Param:
     """
@@ -2347,6 +2359,76 @@ cdef class _VerticalCRS(Base):
         if not proj_is_crs(self.projobj):
             raise CRSError("Input is not a CRS")
         # set proj information
+        self._type = proj_get_type(self.projobj)
+        self.type_name = _CRS_TYPE_MAP[self._type]
+        self._set_base_info()
+        CRSError.clear()
+
+
+cdef class _VerticalCRSGeoid(Base):
+    """
+    .. versionadded:: 2.0.0
+
+    The cython CRS class to be used as the base for the
+    python CRS class.
+    """
+    def __cinit__(self):
+        self._ellipsoid = None
+        self._area_of_use = None
+        self._prime_meridian = None
+        self._datum = None
+        self._sub_crs_list = None
+        self._source_crs = None
+        self._target_crs = None
+        self._geodetic_crs = None
+        self._coordinate_system = None
+        self._coordinate_operation = None
+        self.type_name = "undefined"
+
+    def __init__(self, name, datum_name, datum_auth_name, datum_code, linear_units,
+                 linear_units_conv,  geoid_file, geoid_crs):
+        self.context = proj_context_create()
+        pyproj_context_initialize(self.context, False)
+        geoid_crs_projobj = proj_create(self.context, cstrencode(geoid_crs.to_wkt()))
+
+        if datum_auth_name and datum_code:
+            self.projobj = proj_create_vertical_crs_ex(
+                self.context,
+                cstrencode(name),
+                cstrencode(datum_name),
+                cstrencode(datum_auth_name),
+                cstrencode(datum_code),
+                cstrencode(linear_units),
+                linear_units_conv,
+                cstrencode(geoid_file),
+                NULL,
+                NULL,
+                geoid_crs_projobj,
+                NULL,
+            )
+        else:
+            self.projobj = proj_create_vertical_crs_ex(
+                self.context,
+                cstrencode(name),
+                cstrencode(datum_name),
+                NULL,
+                NULL,
+                cstrencode(linear_units),
+                linear_units_conv,
+                cstrencode(geoid_file),
+                NULL,
+                NULL,
+                geoid_crs_projobj,
+                NULL,
+            )
+        if self.projobj == NULL:
+            raise CRSError(
+                "Invalid projection.")
+        # make sure the input is a CRS
+        if not proj_is_crs(self.projobj):
+            raise CRSError("Input is not a CRS.")
+        # set proj information
+        # self.srs = pystrdecode(proj_string)
         self._type = proj_get_type(self.projobj)
         self.type_name = _CRS_TYPE_MAP[self._type]
         self._set_base_info()
