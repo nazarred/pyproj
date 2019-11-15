@@ -446,14 +446,14 @@ class CRS(_CRS):
         """Create geographical 3D CRS from the parameters."""
 
         utm_crs = _UTMCRS(datum_name, datum_auth_name, datum_code, utm_zone, north=north)
-        return cls.from_wkt(utm_crs.to_wkt())
+        return cls.from_json(utm_crs.to_json())
 
     @classmethod
     def create_geographical_3d_crs_from_datum(cls, datum_name, datum_auth_name, datum_code):
         """Create geographical 3D CRS from the parameters."""
 
         geographical_crs = _Geographic3DCRS(datum_name, datum_auth_name, datum_code)
-        return cls.from_wkt(geographical_crs.to_wkt())
+        return cls.from_json(geographical_crs.to_json())
 
     @classmethod
     def create_vertical_crs(cls, crs_name, datum_name, linear_units, linear_units_conv):
@@ -461,7 +461,7 @@ class CRS(_CRS):
         # Because we can create a _CRS object only from the proj_string firstly we create
         # a _VerticalCRS object than get WKT from it and create _CRS object
         vertical_crs = _VerticalCRS(crs_name, datum_name, linear_units, linear_units_conv)
-        return cls.from_wkt(vertical_crs.to_wkt())
+        return cls.from_json(vertical_crs.to_json())
 
     @classmethod
     def create_vertical_crs_from_geoid(cls, name, geoid_file, geoid_crs,
@@ -493,8 +493,9 @@ class CRS(_CRS):
                 linear_units_conv,
                 geoid_file,
                 geoid_crs,
-            ).to_wkt()
+            ).to_json()
         )
+
     def create_bound_vertical_crs_from_geoid(self, geoid_file, hub_geographic_3D_crs):
         """Use geoid file and vertical CRS for creating bound vertical CRS to WGS84.
 
@@ -502,7 +503,7 @@ class CRS(_CRS):
         """
         hub_geographic_3D_crs = CRS(hub_geographic_3D_crs)
         return CRS(
-            self._create_bound_vertical_crs_from_geoid(geoid_file, hub_geographic_3D_crs).to_wkt()
+            self._create_bound_vertical_crs_from_geoid(geoid_file, hub_geographic_3D_crs).to_json()
         )
 
     def get_crs_with_altered_linear_unit(self, linear_units, linear_units_conv, unit_auth_name, unit_code):
@@ -514,20 +515,20 @@ class CRS(_CRS):
         """Create a Compound CRS from vertical and horizontal CRS."""
         compound_crs = _CompoundCRS(
             crs_name,
-            CRS.from_user_input(vert_crs).to_wkt(),
-            CRS.from_user_input(horiz_crs).to_wkt(),
+            CRS.from_user_input(vert_crs).to_json(),
+            CRS.from_user_input(horiz_crs).to_json(),
         )
-        return cls.from_wkt(compound_crs.to_wkt())
+        return cls.from_json(compound_crs.to_json())
 
     @classmethod
     def create_projected_3d_crs(cls, crs_name, projected_2d_crs, geog_3d_crs):
         """Create a Compound 3D CRS from horizontal 2D CRS and Geographic 3D CRS."""
         projected_3d_crs = _Projected3DCRS(
             crs_name,
-            CRS.from_user_input(projected_2d_crs).to_wkt(),
-            CRS.from_user_input(geog_3d_crs).to_wkt(),
+            CRS.from_user_input(projected_2d_crs).to_json(),
+            CRS.from_user_input(geog_3d_crs).to_json(),
         )
-        return cls.from_wkt(projected_3d_crs.to_wkt())
+        return cls.from_json(projected_3d_crs.to_json())
 
     @classmethod
     def from_authority(cls, auth_name, code):
