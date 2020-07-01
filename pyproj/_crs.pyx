@@ -1746,6 +1746,8 @@ cdef class _CRS(Base):
         )
         proj_destroy(self.projobj)
         self.projobj = always_xy_pj
+        self._coordinate_system = None
+        self._sub_crs_list = None
 
     def _create_bound_vertical_crs_from_geoid(self, geoid_file, hub_geographic_3d_crs):
         geoid_crs_projobj = proj_create(self.context, cstrencode(hub_geographic_3d_crs.to_wkt()))
