@@ -440,6 +440,10 @@ class CRS(_CRS):
 
         super(CRS, self).__init__(projstring)
 
+    def normalize_axi_order(self):
+        """Normalize axis order."""
+        self._normalize_axi_order()
+
     @classmethod
     def create_projected_utm_from_datum(
             cls, datum_name, datum_auth_name, datum_code, utm_zone, north=True):

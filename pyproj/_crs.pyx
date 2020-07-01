@@ -1738,6 +1738,15 @@ cdef class _CRS(Base):
         self._set_base_info()
         CRSError.clear()
 
+    def _normalize_axi_order(self):
+        """Normalize axis order."""
+        cdef PJ* always_xy_pj = proj_normalize_for_visualization(
+            self.context,
+            self.projobj,
+        )
+        proj_destroy(self.projobj)
+        self.projobj = always_xy_pj
+
     def _create_bound_vertical_crs_from_geoid(self, geoid_file, hub_geographic_3d_crs):
         geoid_crs_projobj = proj_create(self.context, cstrencode(hub_geographic_3d_crs.to_wkt()))
         self.projobj = proj_crs_create_bound_vertical_crs(

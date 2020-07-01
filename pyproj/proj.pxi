@@ -7,6 +7,9 @@ cdef extern from "proj.h":
     void proj_context_set_search_paths(
         PJ_CONTEXT *ctx, int count_paths, const char* const* paths)
 
+    void proj_context_set_url_endpoint(
+            PJ_CONTEXT* ctx, const char* url)
+
     cdef struct PJ_INFO:
         int         major
         int         minor
