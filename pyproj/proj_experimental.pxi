@@ -87,3 +87,5 @@ cdef extern from "proj_experimental.h":
                                                  PJ_CARTESIAN_CS_2D_TYPE type,
                                                  const char* unit_name,
                                                  double unit_conv_factor);
+
+    PJ *proj_crs_demote_to_2D(PJ_CONTEXT *ctx, const char* crs_2D_name, const PJ *crs_3D);

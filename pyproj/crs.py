@@ -37,6 +37,7 @@ from pyproj._crs import (  # noqa
     _CRS,
     _VerticalCRS,
     _VerticalCRSGeoid,
+    _DemotedTo2DCRS,
     _CompoundCRS,
     _Projected3DCRS,
     CoordinateOperation,
@@ -458,6 +459,16 @@ class CRS(_CRS):
 
         geographical_crs = _Geographic3DCRS(datum_name, datum_auth_name, datum_code)
         return cls.from_json(geographical_crs.to_json())
+
+    @classmethod
+    def create_demote_to_2d(cls, crs_name, crs_3d):
+        """Create demoted 2d crs from 3d CRS."""
+        return CRS(
+            _DemotedTo2DCRS(
+                crs_name,
+                crs_3d,
+            ).to_json()
+        )
 
     @classmethod
     def create_vertical_crs(cls, crs_name, datum_name, linear_units, linear_units_conv):

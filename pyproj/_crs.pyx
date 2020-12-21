@@ -2445,6 +2445,47 @@ cdef class _VerticalCRSGeoid(Base):
         self._set_base_info()
         CRSError.clear()
 
+
+cdef class _DemotedTo2DCRS(Base):
+    """
+    .. versionadded:: 2.0.0
+
+    The cython CRS class to be used as the base for the
+    python CRS class.
+    """
+    def __cinit__(self):
+        self._ellipsoid = None
+        self._area_of_use = None
+        self._prime_meridian = None
+        self._datum = None
+        self._sub_crs_list = None
+        self._source_crs = None
+        self._target_crs = None
+        self._geodetic_crs = None
+        self._coordinate_system = None
+        self._coordinate_operation = None
+        self.type_name = "undefined"
+
+    def __init__(self, name, crs_3d):
+        self.context = proj_context_create()
+        pyproj_context_initialize(self.context, False)
+        crs_3d_proj_obj = proj_create(self.context, cstrencode(crs_3d.to_json()))
+
+        self.projobj = proj_crs_demote_to_2D(self.context, cstrencode(name), crs_3d_proj_obj)
+
+        if self.projobj == NULL:
+            raise CRSError(
+                "Invalid projection.")
+        # make sure the input is a CRS
+        if not proj_is_crs(self.projobj):
+            raise CRSError("Input is not a CRS.")
+        # set proj information
+        self._type = proj_get_type(self.projobj)
+        self.type_name = _CRS_TYPE_MAP[self._type]
+        self._set_base_info()
+        CRSError.clear()
+
+
 cdef class _CompoundCRS(Base):
     """
     .. versionadded:: Nazar
